@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using Microsoft.JSInterop;
 using MinimalHabitsBlazor.Models;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace MinimalHabitsBlazor.Services;
 
@@ -8,12 +9,17 @@ public class AuthService
 {
     private readonly HttpClient _httpClient;
     private readonly IJSRuntime _jsRuntime;
+    private readonly AuthenticationStateProvider _authStateProvider;
     private const string TokenKey = "authToken";
 
-    public AuthService(HttpClient httpClient, IJSRuntime jsRuntime)
+    public AuthService(
+        HttpClient httpClient, 
+        IJSRuntime jsRuntime,
+        AuthenticationStateProvider authStateProvider)
     {
         _httpClient = httpClient;
         _jsRuntime = jsRuntime;
+        _authStateProvider = authStateProvider;
     }
 
     public async Task<string?> RegisterAsync(RegisterDto dto)
@@ -28,6 +34,7 @@ public class AuthService
         if (result?.TryGetValue("token", out var token) == true)
         {
             await StoreTokenAsync(token);
+            ((CustomAuthStateProvider)_authStateProvider).NotifyUserAuthentication(token);
             return token;
         }
 
@@ -46,6 +53,7 @@ public class AuthService
         if (result?.TryGetValue("token", out var token) == true)
         {
             await StoreTokenAsync(token);
+            ((CustomAuthStateProvider)_authStateProvider).NotifyUserAuthentication(token);
             return token;
         }
 
@@ -55,6 +63,7 @@ public class AuthService
     public async Task LogoutAsync()
     {
         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TokenKey);
+        ((CustomAuthStateProvider)_authStateProvider).NotifyUserLogout();
     }
 
     public async Task<string?> GetTokenAsync()
