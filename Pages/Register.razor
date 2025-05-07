@@ -7,23 +7,46 @@
 <div class="row justify-content-center">
     <div class="col-md-4">
         <h3>Register</h3>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
         <EditForm Model="@registerDto" OnValidSubmit="HandleRegister">
             <DataAnnotationsValidator />
             <ValidationSummary />
 
             <div class="form-group mb-3">
                 <label for="username">Username</label>
-                <InputText id="username" @bind-Value="registerDto.Username" class="form-control" />
+                <InputText id="username" @bind-Value="registerDto.Username" class="form-control" disabled="@isLoading" />
                 <ValidationMessage For="@(() => registerDto.Username)" />
             </div>
 
             <div class="form-group mb-3">
                 <label for="password">Password</label>
-                <InputText type="password" id="password" @bind-Value="registerDto.Password" class="form-control" />
+                <InputText type="password" id="password" @bind-Value="registerDto.Password" class="form-control" disabled="@isLoading" />
                 <ValidationMessage For="@(() => registerDto.Password)" />
             </div>
 
-            <button type="submit" class="btn btn-primary">Register</button>
+            <div class="form-group mb-3">
+                <label for="confirmPassword">Confirm Password</label>
+                <InputText type="password" id="confirmPassword" @bind-Value="confirmPassword" class="form-control" disabled="@isLoading" />
+                @if (!string.IsNullOrEmpty(passwordError))
+                {
+                    <div class="text-danger">@passwordError</div>
+                }
+            </div>
+
+            <button type="submit" class="btn btn-primary" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span> Registering...</span>
+                }
+                else
+                {
+                    <span>Register</span>
+                }
+            </button>
         </EditForm>
 
         <div class="mt-3">
@@ -34,13 +57,42 @@
 
 @code {
     private RegisterDto registerDto = new();
+    private string confirmPassword = string.Empty;
+    private string errorMessage = string.Empty;
+    private string passwordError = string.Empty;
+    private bool isLoading = false;
 
     private async Task HandleRegister()
     {
-        var token = await AuthService.RegisterAsync(registerDto);
-        if (token != null)
+        errorMessage = string.Empty;
+        passwordError = string.Empty;
+
+        if (registerDto.Password != confirmPassword)
         {
-            NavigationManager.NavigateTo("/habits");
+            passwordError = "Passwords do not match";
+            return;
+        }
+
+        try
+        {
+            isLoading = true;
+            var token = await AuthService.RegisterAsync(registerDto);
+            if (token != null)
+            {
+                NavigationManager.NavigateTo("/habits");
+            }
+            else
+            {
+                errorMessage = "Registration failed. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred during registration. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 } 
