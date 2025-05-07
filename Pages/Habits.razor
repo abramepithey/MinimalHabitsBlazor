@@ -1,7 +1,79 @@
 @page "/habits"
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
+@code {
+    private List<Habit>? habits;
+    private HabitDto newHabit = new();
+    private string errorMessage = string.Empty;
+    private bool isLoading = false;
 
-<h3>Habits</h3>
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHabits();
+    }
 
-<p>This page requires authentication.</p> 
+    private async Task LoadHabits()
+    {
+        try
+        {
+            habits = await HabitService.GetHabitsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Failed to load habits. Please try again.";
+        }
+    }
+
+    private async Task HandleAddHabit()
+    {
+        errorMessage = string.Empty;
+        try
+        {
+            isLoading = true;
+            var result = await HabitService.CreateHabitAsync(newHabit);
+            if (result != null)
+            {
+                newHabit = new HabitDto(); // Reset form
+                await LoadHabits();
+            }
+            else
+            {
+                errorMessage = "Failed to create habit. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while creating the habit.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleDeleteHabit(int id)
+    {
+        errorMessage = string.Empty;
+        try
+        {
+            isLoading = true;
+            var success = await HabitService.DeleteHabitAsync(id);
+            if (success)
+            {
+                await LoadHabits();
+            }
+            else
+            {
+                errorMessage = "Failed to delete habit. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while deleting the habit.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+} 
