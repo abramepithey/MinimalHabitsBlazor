@@ -1,8 +1,26 @@
-﻿<CascadingAuthenticationState>
+﻿@using Microsoft.AspNetCore.Components.Web
+
+<CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
-            <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
-            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+            <ErrorBoundary @ref="errorBoundary">
+                <ChildContent>
+                    <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+                    <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+                </ChildContent>
+                <ErrorContent Context="exception">
+                    <div class="container mt-5">
+                        <div class="alert alert-danger">
+                            <h4 class="alert-heading">Error</h4>
+                            <p>@exception.Message</p>
+                            <hr />
+                            <p class="mb-0">
+                                <button class="btn btn-primary" @onclick="ResetError">Try Again</button>
+                            </p>
+                        </div>
+                    </div>
+                </ErrorContent>
+            </ErrorBoundary>
         </Found>
         <NotFound>
             <PageTitle>Not found</PageTitle>
@@ -12,3 +30,12 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
+
+@code {
+    private ErrorBoundary? errorBoundary;
+
+    private void ResetError()
+    {
+        errorBoundary?.Recover();
+    }
+}
