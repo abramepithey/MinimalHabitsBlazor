@@ -81,14 +81,14 @@
             {
                 NavigationManager.NavigateTo("/habits");
             }
-            else
-            {
-                errorMessage = "Registration failed. Please try again.";
-            }
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = ex.Message;
         }
         catch (Exception ex)
         {
-            errorMessage = "An error occurred during registration. Please try again.";
+            errorMessage = $"An unexpected error occurred: {ex.Message}";
         }
         finally
         {
