@@ -62,14 +62,14 @@
             {
                 NavigationManager.NavigateTo("/habits");
             }
-            else
-            {
-                errorMessage = "Invalid username or password.";
-            }
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = ex.Message;
         }
         catch (Exception ex)
         {
-            errorMessage = "An error occurred during login. Please try again.";
+            errorMessage = $"An unexpected error occurred: {ex.Message}";
         }
         finally
         {
